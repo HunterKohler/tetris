@@ -20,8 +20,8 @@ class Peice {
         this.draw()
     }
 
-    draw(color, border) {
-        Box.style(color, border)
+    draw(color) {
+        Box.style(color)
         this.onshape(Box.draw)
     }
 
@@ -239,30 +239,31 @@ class I extends Peice{
 }
 
 class Box  {
+    static BORDER_SIZE = 2
     static SIZE = 40
 
-    static style(color, border = '#000000') {
-        ctx.lineWidth = 2
+    static style(color) {
         ctx.fillStyle = color
-        ctx.strokeStyle = border
     }
 
-    static border(x,y) {
-        ctx.strokeRect(x,y,Box.SIZE,Box.SIZE)
-    }
-
-    static box(x,y) {
-        ctx.fillRect(x,y,Box.SIZE,Box.SIZE)
-    }
-
-    static pos(x = 0,y = 0, i = 0, j = 0){
-        return [(x + i) * Box.SIZE, (y + j) * Box.SIZE]
+    static pos(i,j){
+        return [i * Box.SIZE, j * Box.SIZE]
     }
 
     static draw(i,j) {
-        const pos = Box.pos(i,j)
-        Box.box(...pos)
-        Box.border(...pos)
+        const [x,y] = Box.pos(i,j)
+        ctx.fillRect(
+            x + Box.BORDER_SIZE - 1,
+            y + Box.BORDER_SIZE - 1,
+            Box.SIZE - Box.BORDER_SIZE,
+            Box.SIZE - Box.BORDER_SIZE
+        )
+    }
+
+    static drawBorder(i,j) {
+        const [x,y] = Box.pos(i,j)
+        console.log(i,j,x,y)
+        ctx.strokeRect(x,y,Box.SIZE,Box.SIZE)
     }
 
     constructor(i,j,color) {
@@ -277,29 +278,19 @@ class Box  {
     }
 
     clear() {
-        Box.style(COLORS.WHITE, COLORS.WHITE)
+        Box.style(COLORS.WHITE)
     }
 
-    style(color = this.color, border) {
-        Box.style(color, border)
+    style(color = this.color) {
+        Box.style(color)
     }
 }
 
 class EmptyBox extends Box {
     static draw(i,j) {
-        super.style(COLORS.WHITE, COLORS.WHITE)
+        super.style(COLORS.WHITE)
         super.draw(i,j)
     }
 }
 
 const spawn = () => new [I,O,J,L,S,Z,T][Math.floor(Math.random() * 4)]
-
-
-const grid = []
-const rowcount = []
-for(let i in [...Array(GRID_WIDTH)]) {
-    grid[i] = []
-    for(let j in [...Array(GRID_HEIGHT)]) {
-        rowcount[j] = 0
-    }
-}

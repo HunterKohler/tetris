@@ -5,6 +5,16 @@ canvas.height = HEIGHT = Box.SIZE * GRID_HEIGHT
 
 const ctx = canvas.getContext('2d')
 
+const grid = []
+const rowcount = []
+for(let i in [...Array(GRID_WIDTH)]) {
+    grid[i] = []
+    for(let j in [...Array(GRID_HEIGHT)]) {
+        rowcount[j] = 0
+        Box.drawBorder(i,j)
+    }
+}
+
 let active = spawn()
 const binds = []
 binds[32] = () => {(paused ? restartInterval() : clearInterval(step)); paused = !paused}
@@ -25,23 +35,27 @@ function clearrow(row) {
         for(let j = row; j > 0;j--) {
             grid[i][j] = grid[i][j - 1]
             if(grid[i][j]) {
-                grid.j--
+                grid[i][j].j--
                 grid[i][j].draw()
             } else {
                 EmptyBox.draw(i,j)
             }
-            rowcount[i][j] = rowcount[i][j - 1]
         }
     }
+
+    rowcount.pop()
+    rowcount.unshift(0)
 }
 
 const stepper =
     () => {
         if(!active.down()) {
             active.boxify()
-            for(j in rowcount) {
+            for(let j = rowcount.length; j > 0;j--)
+            {
                 if(rowcount[j] == GRID_WIDTH) {
                     clearrow(j)
+                    j++
                 }
             }
             active = spawn()
