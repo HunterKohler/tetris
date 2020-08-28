@@ -4,55 +4,33 @@ const FPS = .5
 const inGrid = (i,j) => j >= 0 && i >= 0 && j < GRID_HEIGHT && i < GRID_WIDTH
 const vAdd = ([a,b],[c,d]) => [a + c, b + d]
 
-const grid = []
-for(let i = 0; i < GRID_WIDTH; i++) {
-    grid[i] = []
-}
-
-function pos(x = 0,y = 0, i = 0, j = 0){
-    return [(x + i) * Peice.BOX_SIZE, (y + j) * Peice.BOX_SIZE]
+const COLORS =  {
+    WHITE: '#FFFFFF',
+    BLACK: '#000000'
 }
 
 class Peice {
-    static BOX_SIZE = 40
-    constructor(x,y,SHAPE) {
+    constructor(x,y,Child) {
         this.x = x
         this.y = y
-        this.r = 0
 
-        this.SHAPE = SHAPE
-        this.onshape(function(i, j, obj) { grid[i][j] = obj } )
+        this.shape = Child.SHAPE
+        this.color = Child.COLOR
+        this.fillgrid()
         this.draw()
     }
 
-    static style(color, border = '#000000') {
-        ctx.lineWidth = 2
-        ctx.fillStyle = color
-        ctx.strokeStyle = border
-    }
-
-    static border(x,y) {
-        ctx.strokeRect(x,y,Peice.BOX_SIZE,Peice.BOX_SIZE)
-    }
-
-    static box(x,y) {
-        ctx.fillRect(x,y,Peice.BOX_SIZE,Peice.BOX_SIZE)
-    }
-
     draw(color, border) {
-        Peice.style(color, border)
-        this.onshape((i,j) => {
-            Peice.box(...pos(i,j))
-            Peice.border(...pos(i,j))
-        })
+        Box.style(color, border)
+        this.onshape(Box.draw)
     }
 
     clear() {
-        this.draw('#FFFFFF','#FFFFFF')
+        this.draw(COLORS.WHITE,COLORS.WHITE)
     }
 
-    onshape(cb) {
-        for(let [i,j] of this.SHAPE) {
+    onshape(cb, shape) {
+        for(let [i,j] of shape || this.shape) {
             cb(this.x + i, this.y + j, this)
         }
     }
@@ -71,12 +49,12 @@ class Peice {
             valid = valid && inGrid(di,dj) &&
                 (grid[di][dj] == obj || grid[di][dj] == undefined)
         })
-
         if(valid) {
             this.clear()
-            this.onshape((i,j) => delete grid[i][j])
+            this.emptygrid()
             this.x += dx
             this.y += dy
+            this.fillgrid()
             this.draw()
         }
 
@@ -95,20 +73,48 @@ class Peice {
         }
     }
 
-    rotateL() {
-        this.clear()
-        for(let k in this.SHAPE) {
-            this.SHAPE[k] = [-this.SHAPE[k][1], this.SHAPE[k][0]]
+    rotate(dir) {
+        const shape = []
+        this.shape.forEach(([i,j]) => shape.push(dir == 'L' ? [-j,i] : [j,-i]))
+
+        let valid = true
+        this.onshape((i,j,obj) => {
+            valid = valid && inGrid(i,j) &&
+                (grid[i][j] == obj || grid[i][j] == undefined)
+        }, shape)
+
+        if(valid) {
+            this.clear()
+            this.emptygrid()
+            this.shape = shape
+            this.fillgrid()
+            this.draw()
         }
-        this.draw()
+
+        return valid
     }
 
-    rotateR() {
-        this.clear()
-        for(let k in this.SHAPE) {
-            this.SHAPE[k] = [this.SHAPE[k][1], -this.SHAPE[k][0]]
-        }
-        this.draw()
+    rotateL() { this.rotate('L') }
+    rotateR() { this.rotate('R') }
+
+    emptygrid() {
+        this.onshape((i,j) => {
+            rowcount[j]--
+            delete grid[i][j]
+        })
+    }
+
+    fillgrid() {
+        this.onshape((i,j,obj) => {
+            rowcount[j]++
+            grid[i][j] = obj
+        })
+    }
+
+    boxify() {
+        this.onshape((i,j,obj) => {
+            grid[i][j] = new Box(i,j,obj.color)
+        })
     }
 }
 
@@ -118,10 +124,10 @@ class L extends Peice{
     static COLOR = '#FFA500'
 
     constructor(x = 4,y = 1) {
-        super(x,y,L.SHAPE)
+        super(x,y,L)
     }
 
-    draw(color = L.COLOR, border) {
+    draw(color = this.color, border) {
         super.draw(color, border)
     }
 }
@@ -131,10 +137,10 @@ class J extends Peice {
     static COLOR = '#0000FF'
 
     constructor(x = 4,y = 1) {
-        super(x,y,J.SHAPE)
+        super(x,y,J)
     }
 
-    draw(color = J.COLOR, border) {
+    draw(color = this.color, border) {
         super.draw(color, border)
     }
 }
@@ -144,15 +150,14 @@ class O extends Peice{
     static COLOR = '#FFFF00'
 
     constructor(x = 4,y = 0) {
-        super(x,y,O.SHAPE)
+        super(x,y,O)
     }
 
-    draw(color = O.COLOR, border) {
+    draw(color = this.color, border) {
         super.draw(color, border)
     }
 
-    rotateL() {}
-    rotateR() {}
+    rotate() {}
 }
 
 class S extends Peice{
@@ -160,10 +165,10 @@ class S extends Peice{
     static COLOR = '#00FF00'
 
     constructor(x = 4,y = 0) {
-        super(x,y,S.SHAPE)
+        super(x,y,S)
     }
 
-    draw(color = S.COLOR, border) {
+    draw(color = this.color) {
         super.draw(color, border)
     }
 }
@@ -173,23 +178,23 @@ class Z extends Peice{
     static COLOR = '#FF0000'
 
     constructor(x = 4,y = 0) {
-        super(x,y,Z.SHAPE)
+        super(x,y,Z)
     }
 
-    draw(color = Z.COLOR, border) {
+    draw(color = this.color, border) {
         super.draw(color, border)
     }
 }
 
-class T  extends Peice{
+class T extends Peice{
     static SHAPE = [[-1,0],[0,0],[0,-1],[1,0]]
     static COLOR = '#d138ff'
 
     constructor(x = 4,y = 1) {
-        super(x,y,T.SHAPE)
+        super(x,y,T)
     }
 
-    draw(color = T.COLOR, border){
+    draw(color = this.color, border){
         super.draw(color, border)
     }
 }
@@ -197,12 +202,104 @@ class T  extends Peice{
 class I extends Peice{
     static SHAPE = [[-1,0],[0,0],[1,0],[2,0]]
     static COLOR = '#00FFFF'
+    static SHAPES = [
+        [[-2,0],[-1,0],[0,0],[1,0]],
+        [[0,-2], [0,-1], [0,0], [0,1]]
+    ]
 
     constructor(x = 4,y = 1) {
-        super(x,y,I.SHAPE)
+        super(x,y,I)
+        this.r = 0
     }
 
-    draw(color = I.COLOR, border) {
+    draw(color = this.color, border) {
         super.draw(color, border)
+    }
+
+    rotate() {
+        const shape = I.SHAPES[(this.r + 1) % 2]
+
+        let valid = true
+        this.onshape((i,j,obj) => {
+            valid = valid && inGrid(i,j) &&
+                (grid[i][j] == obj || grid[i][j] == undefined)
+        }, shape)
+
+        if(valid) {
+            this.clear()
+            this.emptygrid()
+            this.shape = shape
+            this.r = (this.r + 1) % 2
+            this.fillgrid()
+            this.draw()
+        }
+
+        return valid
+    }
+}
+
+class Box  {
+    static SIZE = 40
+
+    static style(color, border = '#000000') {
+        ctx.lineWidth = 2
+        ctx.fillStyle = color
+        ctx.strokeStyle = border
+    }
+
+    static border(x,y) {
+        ctx.strokeRect(x,y,Box.SIZE,Box.SIZE)
+    }
+
+    static box(x,y) {
+        ctx.fillRect(x,y,Box.SIZE,Box.SIZE)
+    }
+
+    static pos(x = 0,y = 0, i = 0, j = 0){
+        return [(x + i) * Box.SIZE, (y + j) * Box.SIZE]
+    }
+
+    static draw(i,j) {
+        const pos = Box.pos(i,j)
+        Box.box(...pos)
+        Box.border(...pos)
+    }
+
+    constructor(i,j,color) {
+        this.i = i
+        this.j = j
+        this.color = color
+    }
+
+    draw() {
+        this.style()
+        Box.draw(this.i,this.j)
+    }
+
+    clear() {
+        Box.style(COLORS.WHITE, COLORS.WHITE)
+    }
+
+    style(color = this.color, border) {
+        Box.style(color, border)
+    }
+}
+
+class EmptyBox extends Box {
+    static draw(i,j) {
+        super.style(COLORS.WHITE, COLORS.WHITE)
+        super.draw(i,j)
+    }
+}
+
+const spawn = () => new [I,O,J,L,S,Z,T][Math.floor(Math.random() * 4)]
+
+
+const grid = []
+const rowcount = []
+for(let i in [...Array(GRID_WIDTH)]) {
+    grid[i] = []
+    for(let j in [...Array(GRID_HEIGHT)]) {
+        rowcount[j] = 0
     }
 }
