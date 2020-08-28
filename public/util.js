@@ -1,6 +1,8 @@
-const GRID_WIDTH = 20
+const GRID_WIDTH = 10
 const GRID_HEIGHT = 20
 const FPS = .5
+const inGrid = (i,j) => j >= 0 && i >= 0 && j < GRID_HEIGHT && i < GRID_WIDTH
+const vAdd = ([a,b],[c,d]) => [a + c, b + d]
 
 const grid = []
 for(let i = 0; i < GRID_WIDTH; i++) {
@@ -10,7 +12,6 @@ for(let i = 0; i < GRID_WIDTH; i++) {
 function pos(x = 0,y = 0, i = 0, j = 0){
     return [(x + i) * Peice.BOX_SIZE, (y + j) * Peice.BOX_SIZE]
 }
-
 
 class Peice {
     static BOX_SIZE = 40
@@ -38,10 +39,6 @@ class Peice {
         ctx.fillRect(x,y,Peice.BOX_SIZE,Peice.BOX_SIZE)
     }
 
-    static draw(x,y) {
-
-    }
-
     draw(color, border) {
         Peice.style(color, border)
         this.onshape((i,j) => {
@@ -51,7 +48,7 @@ class Peice {
     }
 
     clear() {
-        this.draw('#FFFFFF', '#FFFFFF')
+        this.draw('#FFFFFF','#FFFFFF')
     }
 
     onshape(cb) {
@@ -61,39 +58,66 @@ class Peice {
     }
 
     move(dir) {
-        this.clear()
-        this.onshape((i,j) => delete grid[i][j])
-        const d = {
-            l: p => p.x--,
-            r: p => p.x++,
-            u: p => p.y--,
-            d: p => p.y++
+        const [dx, dy] = {
+            l: [-1,0],
+            r: [1,0],
+            u: [0,-1],
+            d: [0,1]
+        }[dir]
+
+        let valid = true
+        this.onshape((i,j,obj) => {
+            const [di, dj] = [i + dx, j + dy]
+            valid = valid && inGrid(di,dj) &&
+                (grid[di][dj] == obj || grid[di][dj] == undefined)
+        })
+
+        if(valid) {
+            this.clear()
+            this.onshape((i,j) => delete grid[i][j])
+            this.x += dx
+            this.y += dy
+            this.draw()
         }
 
-        d[dir](this)
+        return valid
+    }
+
+    left() { return this.move('l') }
+    right() { return this.move('r') }
+    up() { return this.move('u') }
+    down() { return this.move('d') }
+
+
+    hard() {
+        while(true) {
+            if(!this.down()) { return }
+        }
+    }
+
+    rotateL() {
+        this.clear()
+        for(let k in this.SHAPE) {
+            this.SHAPE[k] = [-this.SHAPE[k][1], this.SHAPE[k][0]]
+        }
         this.draw()
     }
 
-    left() { this.move('l') }
-    right() { this.move('r') }
-    up() { this.move('u') }
-    down() { this.move('d') }
-
-    // rotateR() {
-    //     for([i,j] of this.shape )
-    // }
-    //
-    // rotateL() {
-    //
-    // }
+    rotateR() {
+        this.clear()
+        for(let k in this.SHAPE) {
+            this.SHAPE[k] = [this.SHAPE[k][1], -this.SHAPE[k][0]]
+        }
+        this.draw()
+    }
 }
 
 
 class L extends Peice{
-    static SHAPE = [[0,1],[1,1],[2,0],[2,1]]
+    static SHAPE = [[-1,0],[0,0],[1,0],[1,-1]]
     static COLOR = '#FFA500'
 
-    constructor(x,y) {
+    constructor(x = 4,y = 1) {
         super(x,y,L.SHAPE)
     }
 
@@ -103,10 +127,10 @@ class L extends Peice{
 }
 
 class J extends Peice {
-    static SHAPE = [[0,0],[0,1],[1,1],[2,1]]
+    static SHAPE = [[-1,-1],[-1,0],[0,0],[1,0]]
     static COLOR = '#0000FF'
 
-    constructor(x,y) {
+    constructor(x = 4,y = 1) {
         super(x,y,J.SHAPE)
     }
 
@@ -119,20 +143,23 @@ class O extends Peice{
     static SHAPE = [[0,0],[1,0],[0,1],[1,1]]
     static COLOR = '#FFFF00'
 
-    constructor(x,y) {
+    constructor(x = 4,y = 0) {
         super(x,y,O.SHAPE)
     }
 
     draw(color = O.COLOR, border) {
         super.draw(color, border)
     }
+
+    rotateL() {}
+    rotateR() {}
 }
 
 class S extends Peice{
-    static SHAPE = [[0,1],[1,0],[1,1],[2,0]]
+    static SHAPE = [[-1,1],[0,1],[0,0],[1,0]]
     static COLOR = '#00FF00'
 
-    constructor(x,y) {
+    constructor(x = 4,y = 0) {
         super(x,y,S.SHAPE)
     }
 
@@ -142,10 +169,10 @@ class S extends Peice{
 }
 
 class Z extends Peice{
-    static SHAPE = [[0,0],[1,0],[1,1],[2,1]]
+    static SHAPE = [[-1,0],[0,0],[0,1],[1,1]]
     static COLOR = '#FF0000'
 
-    constructor(x,y) {
+    constructor(x = 4,y = 0) {
         super(x,y,Z.SHAPE)
     }
 
@@ -155,10 +182,10 @@ class Z extends Peice{
 }
 
 class T  extends Peice{
-    static SHAPE = [[1,0],[0,1],[1,1],[2,1]]
+    static SHAPE = [[-1,0],[0,0],[0,-1],[1,0]]
     static COLOR = '#d138ff'
 
-    constructor(x,y) {
+    constructor(x = 4,y = 1) {
         super(x,y,T.SHAPE)
     }
 
@@ -168,10 +195,10 @@ class T  extends Peice{
 }
 
 class I extends Peice{
-    static SHAPE = [[0,0],[1,0],[2,0],[3,0]]
+    static SHAPE = [[-1,0],[0,0],[1,0],[2,0]]
     static COLOR = '#00FFFF'
 
-    constructor(x,y) {
+    constructor(x = 4,y = 1) {
         super(x,y,I.SHAPE)
     }
 

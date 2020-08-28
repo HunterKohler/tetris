@@ -5,13 +5,14 @@ canvas.height = HEIGHT = Peice.BOX_SIZE * GRID_HEIGHT
 
 const ctx = canvas.getContext('2d')
 
-const active = new O(9,9)
-
+let active
 const binds = []
-binds[65] = () => {active.left()}
-binds[68] = () => {active.right()}
+binds[65] = () => active.left()
+binds[68] = () => active.right()
+binds[74] = () => active.rotateR()
+binds[76] = () => active.rotateL()
+binds[87] = () => active.hard()
 document.addEventListener('keydown', (e) => {
-    console.log(e.keyCode)
     if(binds[e.keyCode]) {
         binds[e.keyCode]()
     }
