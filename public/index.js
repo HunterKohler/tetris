@@ -1,7 +1,7 @@
-const canvas = document.querySelector('canvas')
+const canvas = document.querySelector('canvas#board')
 
-canvas.width = WIDTH = Box.SIZE * GRID_WIDTH
-canvas.height = HEIGHT = Box.SIZE * GRID_HEIGHT
+canvas.width = CANVAS_WIDTH
+canvas.height = CANVAS_HEIGHT
 
 const ctx = canvas.getContext('2d')
 
@@ -62,6 +62,6 @@ const stepper =
         }
     }
 
-const restartInterval = () => step = setInterval(stepper, 1000/FPS)
+const restartInterval = () => step = setInterval(stepper, 1000 / FPS)
 let paused = false
 let step = setInterval(stepper, 1000 / FPS)

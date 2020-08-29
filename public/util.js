@@ -1,13 +1,5 @@
-const GRID_WIDTH = 10
-const GRID_HEIGHT = 20
-const FPS = .5
 const inGrid = (i,j) => j >= 0 && i >= 0 && j < GRID_HEIGHT && i < GRID_WIDTH
 const vAdd = ([a,b],[c,d]) => [a + c, b + d]
-
-const COLORS =  {
-    WHITE: '#FFFFFF',
-    BLACK: '#000000'
-}
 
 class Peice {
     constructor(x,y,Child) {
@@ -240,7 +232,8 @@ class I extends Peice{
 
 class Box  {
     static BORDER_SIZE = 2
-    static SIZE = 40
+    static BORDER_COLOR = COLORS.LIGHT_GREY
+    static SIZE = BOX_SIZE
 
     static style(color) {
         ctx.fillStyle = color
@@ -260,9 +253,8 @@ class Box  {
         )
     }
 
-    static drawBorder(i,j) {
-        const [x,y] = Box.pos(i,j)
-        console.log(i,j,x,y)
+    static drawBorder(i,j,color = Box.BOX_COLOR) {
+        const [x,y] = Box.pos(i,j,color)
         ctx.strokeRect(x,y,Box.SIZE,Box.SIZE)
     }
 

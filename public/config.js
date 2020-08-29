@@ -1,0 +1,21 @@
+const GRID_WIDTH = 10
+const GRID_HEIGHT = 20
+const CANVAS_HEIGHT = 600
+const CANVAS_WIDTH = CANVAS_HEIGHT * GRID_WIDTH / GRID_HEIGHT
+const BOX_SIZE = CANVAS_HEIGHT / GRID_HEIGHT
+
+const FPS = 2
+const COLORS =  {
+    WHITE: '#FFFFFF',
+    BLACK: '#000000',
+    BLUE: '#0000FF',
+    AQUA: '#00FFFF',
+    PURPLE: '#d138ff',
+    GREEN: '#00FF00',
+    RED: '#FF0000',
+    YELLOW: '#FFFF00',
+    ORANGE: '#FFA500',
+    GREY: '#808080',
+    DARK_GREY: '#404040',
+    LIGHT_GREY: '#EEEEEE'
+}
